@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTMS — National Train Management System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+      <symbol id="i-network" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="5" r="2.5"/><circle cx="17" cy="18" r="2.5"/><circle cx="5" cy="17" r="2.5"/><path d="M8.2 7 15.5 5.5M7.3 9 5.8 14.5M8 17.2l6.8.8M18 7.6l-.7 7.8"/></symbol>
+      <symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="16" rx="3"/><path d="M8 19 5 22M16 19l3 3M8 8h8M8 13h.01M16 13h.01M5 17h14"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h3M14 14h3M7 17h3"/></symbol>
+      <symbol id="i-control" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="17" r="2"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-7.1 7-12a7 7 0 1 0-14 0c0 4.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></symbol>
+      <symbol id="i-dispatch" viewBox="0 0 24 24"><path d="M4 7h16v10H4zM7 4h10M8 17v3M16 17v3M7 11h10M8 14h.01M16 14h.01"/></symbol>
+      <symbol id="i-yard" viewBox="0 0 24 24"><path d="M4 19h16M6 16V7h12v9M4 7h16M9 7V4h6v3M9 12h6M9 16h6"/></symbol>
+      <symbol id="i-wrench" viewBox="0 0 24 24"><path d="m14.5 6.5 3-3a5 5 0 0 0 3 6.9l-7.8 7.8a2 2 0 1 1-2.8-2.8l7.8-7.8a5 5 0 0 0-3.2-1.1ZM6.1 4.1l3 3-2.2 2.2-3-3a4 4 0 0 1 2.2-2.2Z"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 9 17H3L12 3Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+      <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 9h8M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-report" viewBox="0 0 24 24"><path d="M5 20V4h14v16M8 16v-3M12 16V8M16 16v-6M3 20h18"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c.4-3.5 2.2-5 6-5s5.6 1.5 6 5M16 5.5a3 3 0 0 1 0 5.8M17 15c2.6.2 3.9 1.8 4 4.5"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5M3 3l6 6M21 3l-6 6M3 21l6-6M21 21l-6-6"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6M7 17l-2 2a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0M17 7l2-2a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0"/></symbol>
+      <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M4 14h4l10 5V5L8 10H4v4ZM8 14l1.5 5H7l-1.5-5M21 9a5 5 0 0 1 0 6"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4L3 10M3 5v5h5M4 13a8 8 0 0 0 14 4l3-3M21 19v-5h-5"/></symbol>
+      <linearGradient id="w-cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d2dcde"/><stop offset="1" stop-color="#aebcc1"/></linearGradient>
+      <symbol id="w-rain" viewBox="0 0 32 28">
+        <path fill="url(#w-cloud)" d="M2 14.5C2 10.7 5.1 8 9 8c1.1-3.8 4.1-6 8-6 4.1 0 7.3 2.8 7.9 6.5 3.9.1 5.1 2.5 5.1 5.3 0 2.4-2 4.2-5 4.2H7c-3 0-5-2-5-4.5Z"/>
+        <path fill="#248fc8" d="m7 19-2 5 2.4.8 2-5Zm7 0-2 5 2.4.8 2-5Zm7 0-2 5 2.4.8 2-5Z"/>
+      </symbol>
+      <symbol id="w-cloudy" viewBox="0 0 32 28">
+        <path fill="#d4dfe0" d="M9 12c.1-3.4 2.7-5.8 6.1-5.8 3.2 0 5.7 2.1 6.1 5 3 .1 4.8 1.6 4.8 4 0 2.1-1.8 3.7-4.4 3.7H10c-2.8 0-4.7-1.5-4.7-3.5S6.9 12 9 12Z"/>
+        <path fill="#aebbc0" d="M2 16c0-4 3.2-6.8 7.2-6.8 1.2-3.9 4.4-6.2 8.4-6.2 4.4 0 7.7 3 8.1 7 4 .1 6.3 2.4 6.3 5.4 0 2.9-2.3 5-6 5H8c-3.7 0-6-2-6-4.4Z"/>
+      </symbol>
+      <symbol id="w-partly" viewBox="0 0 32 28">
+        <g fill="none" stroke="#efab2c" stroke-width="1.3" stroke-linecap="round"><path d="M13 1v3M13 20v3M2 12h3M21 12h3M5 4l2 2M19 4l-2 2M5 20l2-2M21 20l-2-2"/></g>
+        <circle fill="#f5a728" cx="13" cy="12" r="7"/>
+        <path fill="#b2bec1" d="M13 18c0-3.3 2.6-5.7 5.8-5.7 1.1-3.1 3.6-4.8 6.6-4.8 3.5 0 6.1 2.4 6.4 5.7 3 .1 4.6 1.9 4.6 4.3 0 2.3-1.8 3.9-4.8 3.9H18c-3 0-5-1.4-5-3.4Z" transform="translate(-3 0) scale(.78)"/>
+      </symbol>
+      <symbol id="w-storm" viewBox="0 0 32 28">
+        <path fill="url(#w-cloud)" d="M2 14.5C2 10.7 5.1 8 9 8c1.1-3.8 4.1-6 8-6 4.1 0 7.3 2.8 7.9 6.5 3.9.1 5.1 2.5 5.1 5.3 0 2.4-2 4.2-5 4.2H7c-3 0-5-2-5-4.5Z"/>
+        <path fill="#2b91c7" d="m8 19-1.6 4.2 2.2.7 1.6-4.2Zm14 0-1.6 4.2 2.2.7 1.6-4.2Z"/>
+        <path fill="#f4bd35" d="m16 17-4 6h3l-2 5 6-7h-3l3-4Z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <svg class="crest" viewBox="0 0 48 56" aria-hidden="true">
+          <path class="crest-outer" d="M24 1 45 10v16c0 14-8.8 24-21 29C11.8 50 3 40 3 26V10L24 1Z"/>
+          <path class="crest-inner" d="M24 6 40 13v13c0 10.8-6.5 19.1-16 23.5C14.5 45.1 8 36.8 8 26V13L24 6Z"/>
+          <path class="rail-mark" d="M14 34h20M16 28h16M18 22h12M15 39l9-18 9 18M20 13h8"/>
+          <circle class="crest-dot" cx="24" cy="18" r="3"/>
+        </svg>
+        <div class="brand-copy"><strong>NTMS</strong><span>National Train</span><span>Management System</span></div>
+      </div>
+      <div class="time-block">
+        <div class="clock">09:42:17</div>
+        <div class="date">Tuesday, 27 May 2025</div>
+        <span class="live-pill"><i></i> LIVE</span>
+      </div>
+      <div class="kpi-row">
+        <article class="kpi-card"><label>TOTAL TRAINS</label><strong>2,145</strong><small class="up">▲ 24 vs yesterday</small></article>
+        <article class="kpi-card"><label>IN SERVICE</label><strong>1,842</strong><small class="up">REVENUE <b>85.9%</b></small></article>
+        <article class="kpi-card wide"><label>ON TIME PERFORMANCE</label><strong>92.7%</strong><small class="down">▼ 1.8% vs yesterday</small></article>
+        <article class="kpi-card wide"><label>PASSENGERS TODAY</label><strong>1,234,567</strong><small class="up">▲ 8.2% vs yesterday</small></article>
+        <article class="kpi-card wide"><label>REVENUE TODAY</label><strong>$12.45M</strong><small class="up">▲ 5.6% vs yesterday</small></article>
+        <article class="kpi-card energy"><label>ENERGY USAGE</label><strong>98,765 kWh</strong><small class="up">▼ 3.2% vs yesterday</small></article>
+      </div>
+      <div class="top-tools">
+        <button class="icon-btn" aria-label="Search"><svg><use href="#i-search"/></svg></button>
+        <button class="icon-btn" aria-label="Fullscreen"><svg><use href="#i-expand"/></svg></button>
+        <button class="icon-btn" aria-label="Settings"><svg><use href="#i-settings"/></svg></button>
+        <button class="icon-btn" aria-label="Notifications"><svg><use href="#i-bell"/></svg></button>
+      </div>
+      <button class="profile-block" aria-label="Open Control Center profile">
+        <span class="avatar">✦</span><span><b>Control Center</b><small>Super Admin</small></span><span class="profile-chevron">⌄</span>
+      </button>
+    </header>
+
+    <aside class="sidebar">
+      <nav aria-label="Primary navigation">
+        <div class="nav-group">
+          <div class="nav-heading">MAIN</div>
+          <button class="nav-item active"><svg><use href="#i-grid"/></svg><span>Dashboard</span></button>
+          <button class="nav-item"><svg><use href="#i-network"/></svg><span>Network Overview</span></button>
+          <button class="nav-item"><svg><use href="#i-train"/></svg><span>Train Monitoring</span></button>
+          <button class="nav-item"><svg><use href="#i-calendar"/></svg><span>Timetable &amp; Schedule</span></button>
+          <button class="nav-item"><svg><use href="#i-control"/></svg><span>Operations Control</span></button>
+          <button class="nav-item"><svg><use href="#i-pin"/></svg><span>Live Map</span></button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-heading">OPERATIONS</div>
+          <button class="nav-item"><svg><use href="#i-dispatch"/></svg><span>Train Dispatch</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-yard"/></svg><span>Yard Management</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-wrench"/></svg><span>Track Maintenance</span></button>
+          <button class="nav-item"><svg><use href="#i-alert"/></svg><span>Incident Management</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-clipboard"/></svg><span>Work Orders</span></button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-heading">PASSENGER</div>
+          <button class="nav-item"><svg><use href="#i-pin"/></svg><span>Stations</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-users"/></svg><span>Passenger Flow</span></button>
+          <button class="nav-item"><svg><use href="#i-megaphone"/></svg><span>Announcements</span></button>
+          <button class="nav-item"><svg><use href="#i-users"/></svg><span>Feedback &amp; Complaints</span></button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-heading">ASSETS</div>
+          <button class="nav-item"><svg><use href="#i-train"/></svg><span>Rolling Stock</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-clipboard"/></svg><span>Equipment</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-yard"/></svg><span>Facilities</span><em>›</em></button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-heading">ANALYTICS</div>
+          <button class="nav-item"><svg><use href="#i-report"/></svg><span>Reports</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-report"/></svg><span>Performance</span><em>›</em></button>
+          <button class="nav-item"><svg><use href="#i-report"/></svg><span>Forecasting</span></button>
+          <button class="nav-item"><svg><use href="#i-grid"/></svg><span>Data Explorer</span><em>›</em></button>
+        </div>
+        <div class="nav-group last-group">
+          <div class="nav-heading">SYSTEM</div>
+          <button class="nav-item"><svg><use href="#i-users"/></svg><span>Users &amp; Roles</span></button>
+          <button class="nav-item"><svg><use href="#i-clipboard"/></svg><span>Audit Logs</span></button>
+          <button class="nav-item"><svg><use href="#i-settings"/></svg><span>System Settings</span></button>
+        </div>
+      </nav>
+      <div class="sidebar-status">
+        <div class="status-label">SYSTEM STATUS</div>
+        <div class="status-online"><i></i>All Systems Operational</div>
+      </div>
+      <div class="build-label">NTMS v2.8.1 build 7B54</div>
+    </aside>
+
+    <main class="main-area">
+      <div class="dashboard-grid">
+        <div class="left-column">
+          <section class="panel map-panel">
+            <div class="panel-head"><h2>NETWORK MAP - LIVE TRAIN POSITIONS</h2><button class="outline-button">Legend</button></div>
+            <div class="map-stage">
+              <svg class="network-map" viewBox="0 0 856 359" preserveAspectRatio="none" aria-label="Live train network map">
+                <defs>
+                  <linearGradient id="mapBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#102132"/><stop offset="1" stop-color="#112538"/></linearGradient>
+                  <filter id="mapGlow"><feGaussianBlur stdDeviation="2.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  <pattern id="mapGrid" width="90" height="72" patternUnits="userSpaceOnUse"><path d="M90 0H0V72" fill="none" stroke="#577487" stroke-opacity=".10" stroke-width=".7"/></pattern>
+                </defs>
+                <rect width="856" height="359" fill="url(#mapBg)"/>
+                <rect width="856" height="359" fill="url(#mapGrid)"/>
+                <g opacity=".22" fill="none" stroke="#5c8297" stroke-width=".6"><path d="M0 80C160 44 298 95 415 55S674 38 856 75"/><path d="M0 190c168-34 252 28 393-6s290-11 463 28"/><path d="M80 0c66 94 53 204 95 359M250 0c-26 130 41 211-4 359M505 0c-20 120 45 222 2 359M742 0c45 100-23 232 38 359"/></g>
+                <g class="land" stroke="#4e6977" stroke-opacity=".72" stroke-width="1.2">
+                  <path d="M13 28 31 20l25 7 19 17 25 2 22 16 27 9 20 19-2 23-17 21-4 29-18 13-4 30-17 15-12 35-17 5-11-25-17-13-4-23-14-12 8-26-15-17 8-19-14-17Z"/>
+                  <path d="M159 72 176 64l21 11 16 2 7 14 19 7 13 19-8 17 11 19-14 18-12 32-18 9-10-21-20-5-9-24-14-10 8-22-15-13 6-17-14-9Z"/>
+                  <path d="M330 186l15-10 19 6 19-4 13 10 12 19 25 5 13 18 25 4 20 15 10 27-20 8-20-10-14 12-25-6-20 16-26-5-21 10-18-13-24 2-12-18 9-18-11-15 22-17 4-22Z"/>
+                  <path d="M474 49 504 38l25 6 11 15 26 3 17 15 20 7 11 22-7 19 17 15-13 17 10 19-20 18-15 29-19 18-26-9-19 7-21-11-8-28-19-5-8-22 8-19-11-18 13-19-7-17Z"/>
+                  <path d="M644 89l20-10 18 9 12 17 15 8 4 25 13 16-7 26 12 21-10 18 8 23-18 22-17 33-17 12-16-18-4-28-16-12 5-24-12-18 12-17-5-21 18-19Z"/>
+                  <path d="M757 150l21-10 22 10 5 19 23 12 14 21-8 19 13 22-11 19 4 20-22 7-21-16-20-20-1-25-14-15 6-24-10-14Z"/>
+                  <path d="M275 290l20-3 14 8 27-5 22 10 34-4 24 14 38-4 25 13 40 1 29 15 34-3 22 14 38-7 17 13-27 7-38 0-25 11-39-4-28 9-36-10-30 7-31-11-38 4-20-10-40 2-20-13-31 0-19-13Z"/>
+                  <path d="M710 295l21-9 20 5 25-8 25 11 30-4 22 10-16 11-31 0-15 14-30-7-26 7-27-12Z"/>
+                </g>
+                <g class="land-traced">
+                  <path d="M 522,292 506,296 500,288 482,288 482,296 460,288 450,294 424,296 422,288 378,288 378,284 354,280 348,272 346,276 340,272 314,274 290,264 266,266 262,250 226,248 220,234 250,236 250,232 226,220 222,212 216,212 222,214 220,220 200,220 200,212 214,212 182,200 164,182 152,178 134,158 136,148 128,130 100,108 92,108 94,102 102,106 104,100 92,100 94,92 86,92 86,84 70,76 80,66 72,58 74,48 70,52 74,42 54,46 40,34 30,38 14,28 18,24 14,16 64,12 68,24 82,24 72,26 76,30 70,32 84,32 84,26 92,26 94,36 100,34 96,40 102,36 108,44 132,44 130,58 136,54 134,60 138,56 142,64 166,64 168,70 160,70 162,78 170,76 170,86 180,84 182,94 190,90 190,98 200,98 194,108 204,102 202,108 208,114 204,114 206,122 200,130 206,140 222,144 222,154 216,158 238,154 238,158 234,156 236,164 212,164 228,164 248,178 246,210 262,210 264,216 242,218 246,226 256,218 260,226 288,226 290,232 306,238 314,238 316,232 316,236 338,234 340,240 322,238 320,242 338,252 352,248 354,254 362,254 360,242 364,242 362,246 370,244 368,240 386,242 376,252 382,258 390,254 388,242 392,250 408,250 404,242 430,242 430,250 448,258 448,264 470,266 470,270 444,270 448,272 442,274 444,278 456,272 460,276 478,272 484,276 484,286 502,286 506,282 498,280 506,280 510,282 506,290 510,284 522,290Z"/>
+                  <path d="M246 227c15-3 30 2 43 9 17 8 32 12 48 16 18 5 33 7 49 13 17 5 32 6 48 10 16 5 31 3 45 9 14 5 28 5 41 10l22 4 15 8-12 7-22-3-17 4-20-4-18 5-19-5-19 4-20-7-20 3-18-8-21 2-16-8-18 0-14-8-15-1-13-9-15-2-11-9-13-4Z"/>
+                  <path d="M554 136 534 136 530 156 540 156 538 160 548 156 550 160 532 160 532 166 524 166 522 170 526 170 510 180 510 184 516 182 518 206 512 206 508 218 518 216 518 220 478 238 476 224 466 220 444 222 442 216 428 212 418 220 402 220 402 210 386 214 384 206 368 210 348 206 342 182 334 178 330 152 322 146 320 152 314 152 316 146 306 140 306 126 292 126 288 120 294 92 290 82 298 66 308 62 330 76 336 74 334 82 350 92 362 86 394 92 402 76 432 78 438 74 454 60 458 48 472 48 478 42 490 48 504 22 520 18 530 30 546 40 552 38 552 42 538 44 536 52 552 52 556 58 540 56 536 60 544 60 542 66 538 64 544 72 538 78 546 82 548 90 556 90 556 104 542 112 536 132 550 130 554 134Z"/>
+                  <path d="M702 88 688 92 690 96 676 92 684 96 680 98 684 102 672 104 672 110 678 112 676 118 666 118 656 130 646 128 650 132 638 136 632 132 632 142 650 146 638 146 634 160 628 160 630 166 648 168 668 184 666 190 670 186 672 192 666 196 674 202 668 208 676 208 676 212 668 224 678 218 670 226 678 228 672 244 666 236 650 242 654 248 670 246 668 252 640 252 636 246 630 252 630 260 646 262 658 270 658 276 634 282 620 282 612 274 586 276 582 264 608 256 618 230 636 224 634 212 624 200 632 184 620 176 616 166 608 170 598 166 596 148 602 146 602 128 608 126 612 106 628 102 636 92 666 94 666 86 692 90 702 86Z"/>
+                  <path d="M776 272 772 278 732 278 716 292 712 304 702 302 704 306 688 310 702 314 678 314 686 312 680 308 686 302 682 292 700 274 712 272 692 270 696 264 710 262 716 264 714 270 726 272 734 270 740 260 740 264 748 264 746 258 752 256 754 264 762 260 776 270Z"/>
+                </g>
+                <image class="map-detail" href="./map-detail.svg" x="0" y="0" width="856" height="359"/>
+                <g class="small-islands" fill="#243c49" stroke="#527180" stroke-opacity=".45"><path d="M85 313l23-5 13 8-11 9-29-2Z"/><path d="M150 327l16-6 20 7-10 9-24-2Z"/><path d="M576 329l14-7 24 5-3 9-25 3Z"/><path d="M619 311l17-8 27 8-11 11-24-3Z"/><path d="M675 329l18-5 24 8-17 7-20-3Z"/><path d="M785 320l28-5 16 8-17 9-25-2Z"/></g>
+                <g class="routes" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path class="route-green" d="M14 27 54 38 99 44 130 82 157 142 186 195 217 251 260 270"/>
+                  <path class="route-blue" d="M15 27 55 38 98 43 131 83 160 115 192 154 216 201"/>
+                  <path class="route-yellow" d="M129 141 160 185 192 213 226 235 257 260 285 282"/>
+                  <path class="route-orange" d="M225 235 259 260 284 282 311 300 340 313 371 321"/>
+                  <path class="route-pink" d="M319 117 357 135 385 171 403 205 452 218 480 201 497 181 530 199 568 204 615 201"/>
+                  <path class="route-red" d="M405 206 451 219 479 201 497 181 531 199 567 204 615 201"/>
+                  <path class="route-blue" d="M528 84 530 116 561 140 559 171 538 195 527 232 502 264"/>
+                  <path class="route-orange" d="M693 108 668 133 660 163 668 195 650 222 657 254 637 286"/>
+                  <path class="route-purple" d="M292 280 324 290 356 305 388 306 416 321 449 314 478 304"/>
+                  <path class="route-cyan" d="M356 305 397 306 429 321 467 318 502 329 549 329"/>
+                </g>
+                <g class="stations" filter="url(#mapGlow)">
+                  <g class="station green"><circle cx="14" cy="27" r="4"/><circle cx="54" cy="38" r="5"/><circle cx="99" cy="44" r="4"/><circle cx="130" cy="82" r="6"/><circle cx="157" cy="142" r="4"/><circle cx="186" cy="195" r="5"/><circle cx="217" cy="251" r="4"/></g>
+                  <g class="station blue"><circle cx="15" cy="27" r="4"/><circle cx="55" cy="38" r="3"/><circle cx="98" cy="43" r="5"/><circle cx="131" cy="83" r="4"/><circle cx="160" cy="115" r="5"/><circle cx="192" cy="154" r="4"/><circle cx="216" cy="201" r="6"/></g>
+                  <g class="station yellow"><circle cx="129" cy="141" r="4"/><circle cx="160" cy="185" r="5"/><circle cx="192" cy="213" r="5"/><circle cx="226" cy="235" r="4"/><circle cx="257" cy="260" r="5"/></g>
+                  <g class="station orange"><circle cx="225" cy="235" r="4"/><circle cx="259" cy="260" r="5"/><circle cx="284" cy="282" r="4"/><circle cx="311" cy="300" r="5"/><circle cx="340" cy="313" r="4"/></g>
+                  <g class="station pink"><circle cx="319" cy="117" r="4"/><circle cx="357" cy="135" r="3"/><circle cx="385" cy="171" r="4"/><circle cx="403" cy="205" r="5"/><circle cx="452" cy="218" r="4"/><circle cx="480" cy="201" r="5"/><circle cx="497" cy="181" r="4"/><circle cx="531" cy="199" r="4"/><circle cx="567" cy="204" r="3"/><circle cx="615" cy="201" r="5"/></g>
+                  <g class="station route-blue"><circle cx="528" cy="84" r="5"/><circle cx="530" cy="116" r="4"/><circle cx="561" cy="140" r="5"/><circle cx="559" cy="171" r="4"/><circle cx="538" cy="195" r="5"/><circle cx="527" cy="232" r="5"/><circle cx="502" cy="264" r="5"/></g>
+                  <g class="station orange"><circle cx="693" cy="108" r="4"/><circle cx="668" cy="133" r="4"/><circle cx="660" cy="163" r="5"/><circle cx="668" cy="195" r="4"/><circle cx="650" cy="222" r="5"/><circle cx="657" cy="254" r="4"/><circle cx="637" cy="286" r="5"/></g>
+                  <g class="station purple"><circle cx="292" cy="280" r="4"/><circle cx="324" cy="290" r="5"/><circle cx="356" cy="305" r="4"/><circle cx="388" cy="306" r="5"/><circle cx="416" cy="321" r="4"/><circle cx="449" cy="314" r="5"/><circle cx="478" cy="304" r="4"/></g>
+                  <g class="station cyan"><circle cx="429" cy="321" r="5"/><circle cx="467" cy="318" r="4"/><circle cx="502" cy="329" r="5"/><circle cx="549" cy="329" r="4"/></g>
+                </g>
+                <g class="map-labels">
+                  <text x="20" y="19">Banda Aceh</text><text x="104" y="30">Lhokseumawe</text><text x="117" y="71">Medan</text><text x="131" y="133">Pematang</text><text x="128" y="144">Siantar</text><text x="167" y="172">Padang</text><text x="196" y="227">Palembang</text><text x="179" y="267">Bengkulu</text><text x="245" y="267">Bandar</text><text x="248" y="278">Lampung</text><text x="276" y="297">Jakarta</text><text x="292" y="311">Cirebon</text><text x="271" y="324">Bogor</text><text x="346" y="305">Yogyakarta</text><text x="397" y="334">Surabaya</text><text x="485" y="296">Banjarmasin</text><text x="546" y="201">Samarinda</text><text x="547" y="225">Balikpapan</text><text x="523" y="70">Tarakan</text><text x="677" y="99">Manado</text><text x="657" y="152">Palu</text><text x="664" y="213">Kendari</text><text x="640" y="301">Makassar</text><text x="305" y="107">Pontianak</text><text x="369" y="180">Pontianak</text><text x="426" y="182">Balikpapan</text><text x="468" y="250">Banjarmasin</text><text x="515" y="321">Bali</text><text x="560" y="324">Malang</text>
+                </g>
+                <g class="train-tags">
+                  <g transform="translate(118 96)"><rect width="58" height="31" rx="4"/><text x="7" y="13">KA 03</text><text x="7" y="24">120 km/h</text></g>
+                  <g class="yellow-tag" transform="translate(210 177)"><rect width="63" height="31" rx="4"/><text x="7" y="13">KA 272</text><text x="7" y="24">87 km/h</text></g>
+                  <g class="green-tag" transform="translate(32 218)"><rect width="61" height="31" rx="4"/><text x="7" y="13">KA 142</text><text x="7" y="24">105 km/h</text></g>
+                  <g class="dark-tag" transform="translate(324 234)"><rect width="61" height="31" rx="4"/><text x="7" y="13">KA 096</text><text x="7" y="24">95 km/h</text></g>
+                  <g class="red-tag" transform="translate(334 309)"><rect width="58" height="31" rx="4"/><text x="7" y="13">KA 30</text><text x="7" y="24">0 km/h</text></g>
+                  <g class="green-tag" transform="translate(564 161)"><rect width="64" height="31" rx="4"/><text x="7" y="13">KA 276</text><text x="7" y="24">110 km/h</text></g>
+                  <g class="blue-tag" transform="translate(475 289)"><rect width="58" height="31" rx="4"/><text x="7" y="13">KA 18</text><text x="7" y="24">114 km/h</text></g>
+                </g>
+                <g class="routes-traced">
+                  <path class="route-green" d="M20 18 43 26 65 25 89 30 103 55 123 69 133 92 146 119"/>
+                  <path class="route-green" d="M192 166 177 176 167 184"/>
+                  <path class="route-blue" d="M20 18 43 26 65 25 89 30 103 55 126 51 145 67 155 88 174 100"/>
+                  <path class="route-yellow" d="M146 119 161 145 192 166 218 178 239 209"/>
+                  <path class="route-orange" d="M239 209 239 221 254 229"/>
+                  <path class="route-blue" d="M239 221 254 229 273 244 293 254 310 243 333 253 341 258 358 267"/>
+                  <path class="route-pink" d="M254 229 273 244 293 254 310 243 333 253 341 258 358 267"/>
+                  <path class="route-orange" d="M358 267 379 260 400 258 428 254"/>
+                  <path class="route-pink" d="M400 258 428 254 442 280"/>
+                  <path class="route-green" d="M358 267 379 276 400 281 428 280 442 280"/>
+                  <path class="route-cyan" d="M428 280 442 280 475 281"/>
+                  <path class="route-pink" d="M300 80 322 89 343 97 357 127 379 151 402 158"/>
+                  <path class="route-red" d="M402 158 423 144 449 157 468 157 487 155"/>
+                  <path class="route-blue" d="M513 54 513 72 529 91 524 109 512 127 489 144 487 155 487 179 467 203"/>
+                  <path class="route-orange" d="M659 95 639 114 628 144 625 163 654 199 653 228 631 242"/>
+                </g>
+                <g class="stations-traced">
+                  <g class="green"><circle cx="20" cy="18" r="4"/><circle cx="43" cy="26" r="5"/><circle cx="65" cy="25" r="4"/><circle cx="89" cy="30" r="5"/><circle cx="103" cy="55" r="6"/><circle cx="123" cy="69" r="3"/><circle cx="133" cy="92" r="5"/></g>
+                  <g class="blue"><circle cx="20" cy="18" r="4"/><circle cx="43" cy="26" r="4"/><circle cx="65" cy="25" r="5"/><circle cx="89" cy="30" r="4"/><circle cx="126" cy="51" r="5"/><circle cx="145" cy="67" r="4"/><circle cx="155" cy="88" r="4"/><circle cx="174" cy="100" r="5"/><circle cx="239" cy="221" r="4"/><circle cx="254" cy="229" r="6"/><circle cx="273" cy="244" r="4"/><circle cx="293" cy="254" r="4"/><circle cx="310" cy="243" r="4"/><circle cx="333" cy="253" r="4"/><circle cx="341" cy="258" r="4"/><circle cx="475" cy="281" r="5"/></g>
+                  <g class="yellow"><circle cx="146" cy="119" r="5"/><circle cx="161" cy="145" r="6"/><circle cx="192" cy="166" r="5"/><circle cx="218" cy="178" r="4"/></g>
+                  <g class="orange"><circle cx="239" cy="209" r="6"/><circle cx="358" cy="267" r="5"/><circle cx="379" cy="260" r="4"/><circle cx="400" cy="258" r="5"/><circle cx="631" cy="242" r="5"/><circle cx="653" cy="228" r="4"/><circle cx="654" cy="199" r="5"/><circle cx="625" cy="163" r="4"/><circle cx="628" cy="144" r="5"/><circle cx="639" cy="114" r="4"/><circle cx="659" cy="95" r="4"/></g>
+                  <g class="pink"><circle cx="300" cy="80" r="5"/><circle cx="322" cy="89" r="3"/><circle cx="343" cy="97" r="4"/><circle cx="357" cy="127" r="4"/><circle cx="379" cy="151" r="5"/><circle cx="449" cy="157" r="4"/><circle cx="468" cy="157" r="3"/><circle cx="428" cy="254" r="6"/></g>
+                  <g class="red"><circle cx="402" cy="158" r="4"/><circle cx="423" cy="144" r="5"/><circle cx="487" cy="155" r="6"/></g>
+                  <g class="blue"><circle cx="513" cy="54" r="4"/><circle cx="513" cy="72" r="3"/><circle cx="529" cy="91" r="5"/><circle cx="524" cy="109" r="4"/><circle cx="512" cy="127" r="5"/><circle cx="489" cy="144" r="5"/></g>
+                  <g class="cyan"><circle cx="487" cy="179" r="5"/><circle cx="467" cy="203" r="5"/><circle cx="442" cy="280" r="6"/></g>
+                  <g class="green"><circle cx="379" cy="276" r="5"/><circle cx="400" cy="281" r="6"/></g>
+                </g>
+                <image class="station-cores" href="./station-cores.svg" x="0" y="0" width="856" height="359"/>
+                <g class="map-labels-traced">
+                  <text x="22" y="19">Banda Aceh</text><text x="96" y="27">Lhokseumawe</text><text x="108" y="51">Medan</text><text x="74" y="78">Pematang</text><text x="74" y="89">Siantar</text><text x="111" y="125">Padang</text><text x="168" y="148">Jambi</text><text x="198" y="168">Palembang</text><text x="132" y="187">Bengkulu</text><text x="218" y="219">Bandar</text><text x="218" y="230">Lampung</text><text x="258" y="233">Jakarta</text><text x="310" y="239">Cirebon</text><text x="282" y="263">Bogor</text><text x="351" y="296">Yogyakarta</text><text x="398" y="240">Surabaya</text><text x="398" y="251">Gubeng</text><text x="445" y="271">Sidoarjo</text><text x="461" y="291">Bali</text><text x="473" y="292">Malang</text><text x="305" y="76">Pontianak</text><text x="357" y="180">Pontianak</text><text x="423" y="181">Balikpapan</text><text x="468" y="214">Samarinda</text><text x="518" y="44">Tarakan</text><text x="665" y="91">Manado</text><text x="647" y="132">Palu</text><text x="660" y="201">Kendari</text><text x="632" y="249">Makassar</text><text x="510" y="202">Banjarmasin</text><text x="510" y="166">Samarinda</text><text x="510" y="182">Balikpapan</text>
+                </g>
+                <g class="train-tags-traced">
+                  <g transform="translate(171 50)"><rect width="52" height="30" rx="4"/><text x="7" y="13">KA 03</text><text x="7" y="24">120 km/h</text></g>
+                  <g class="yellow-tag" transform="translate(220 109)"><rect width="58" height="30" rx="4"/><text x="7" y="13">KA 272</text><text x="7" y="24">87 km/h</text></g>
+                  <g class="green-tag" transform="translate(54 134)"><rect width="60" height="30" rx="4"/><text x="7" y="13">KA 142</text><text x="7" y="24">105 km/h</text></g>
+                  <g class="dark-tag" transform="translate(291 194)"><rect width="58" height="30" rx="4"/><text x="7" y="13">KA 096</text><text x="7" y="24">95 km/h</text></g>
+                  <g class="red-tag" transform="translate(302 274)"><rect width="58" height="30" rx="4"/><text x="7" y="13">KA 30</text><text x="7" y="24">0 km/h</text></g>
+                  <g class="green-tag" transform="translate(554 88)"><rect width="64" height="30" rx="4"/><text x="7" y="13">KA 276</text><text x="7" y="24">110 km/h</text></g>
+                  <g class="blue-tag" transform="translate(512 245)"><rect width="58" height="30" rx="4"/><text x="7" y="13">KA 18</text><text x="7" y="24">114 km/h</text></g>
+                </g>
+              </svg>
+              <div class="map-stack map-control"><svg><use href="#i-layers"/></svg></div>
+              <div class="map-zoom map-control"><button aria-label="Zoom in"><svg><use href="#i-plus"/></svg></button><button aria-label="Zoom out"><svg><use href="#i-minus"/></svg></button></div>
+              <div class="map-filters">
+                <div class="view-filter"><span>View:</span><button class="selected">All Trains</button><button>High Speed</button><button>Intercity</button><button>Local</button><button>Freight</button></div>
+                <div class="show-filter"><span>Show:</span><label><input type="checkbox" checked> Stations</label><label><input type="checkbox" checked> Tracks</label><label><input type="checkbox" checked> Yards</label><label><input type="checkbox" checked> Alerts</label><button class="map-link" aria-label="Link view"><svg><use href="#i-link"/></svg></button><button class="three-d">3D</button></div>
+              </div>
+            </div>
+          </section>
+
+          <div class="left-mid-row">
+            <section class="panel status-panel">
+              <div class="panel-head"><h2>TRAIN STATUS OVERVIEW</h2></div>
+              <div class="status-main">
+                <div class="donut train-donut"><div><strong>2,145</strong><span>Total Trains</span></div></div>
+                <div class="legend-list">
+                  <div><i class="green-dot"></i><span>In Service</span><b>1,842 <small>(85.9%)</small></b></div>
+                  <div><i class="blue-dot"></i><span>At Station</span><b>156 <small>(7.3%)</small></b></div>
+                  <div><i class="orange-dot"></i><span>Delayed</span><b>78 <small>(3.6%)</small></b></div>
+                  <div><i class="purple-dot"></i><span>Maintenance</span><b>42 <small>(2.0%)</small></b></div>
+                  <div><i class="gray-dot"></i><span>Out of Service</span><b>27 <small>(1.2%)</small></b></div>
+                </div>
+              </div>
+              <div class="subchart-title">ON TIME PERFORMANCE (LAST 7 DAYS)</div>
+              <div class="performance-chart">
+                <svg viewBox="0 0 286 99" preserveAspectRatio="none" aria-label="On time performance chart">
+                  <g class="chart-grid"><path d="M26 9h250M26 28h250M26 47h250M26 66h250M26 85h250"/><path d="M26 9v76M68 9v76M110 9v76M152 9v76M194 9v76M236 9v76M276 9v76"/></g>
+                  <g class="axis-labels"><text x="4" y="11">100%</text><text x="10" y="30">75%</text><text x="10" y="49">50%</text><text x="10" y="68">25%</text><text x="22" y="98">21 May</text><text x="64" y="98">22 May</text><text x="106" y="98">23 May</text><text x="148" y="98">25 May</text><text x="190" y="98">26 May</text><text x="234" y="98">27 May</text></g>
+                  <path class="chart-line overall" d="M25 23 62 28 98 38 135 42 171 44 206 43 240 37 272 31"/><path class="chart-line intercity" d="M25 46 62 21 98 21 135 24 171 24 206 59 240 59 272 22"/><path class="chart-line commuter" d="M25 32 62 26 98 32 135 43 171 27 206 20 240 21 272 15"/><path class="chart-line freight" d="M25 48 62 46 98 46 135 59 171 53 206 59 240 59 272 48"/>
+                  <g class="chart-dots overall-dots"><circle cx="25" cy="23" r="2"/><circle cx="62" cy="28" r="2"/><circle cx="98" cy="38" r="2"/><circle cx="135" cy="42" r="2"/><circle cx="171" cy="44" r="2"/><circle cx="206" cy="43" r="2"/><circle cx="240" cy="37" r="2"/><circle cx="272" cy="31" r="2"/></g>
+                  <g class="chart-dots intercity-dots"><circle cx="25" cy="46" r="2"/><circle cx="62" cy="21" r="2"/><circle cx="98" cy="21" r="2"/><circle cx="135" cy="24" r="2"/><circle cx="171" cy="24" r="2"/><circle cx="206" cy="59" r="2"/><circle cx="240" cy="59" r="2"/><circle cx="272" cy="22" r="2"/></g>
+                  <g class="chart-dots commuter-dots"><circle cx="25" cy="32" r="2"/><circle cx="62" cy="26" r="2"/><circle cx="98" cy="32" r="2"/><circle cx="135" cy="43" r="2"/><circle cx="171" cy="27" r="2"/><circle cx="206" cy="20" r="2"/><circle cx="240" cy="21" r="2"/><circle cx="272" cy="15" r="2"/></g>
+                  <g class="chart-dots freight-dots"><circle cx="25" cy="48" r="2"/><circle cx="62" cy="46" r="2"/><circle cx="98" cy="46" r="2"/><circle cx="135" cy="59" r="2"/><circle cx="171" cy="53" r="2"/><circle cx="206" cy="59" r="2"/><circle cx="240" cy="59" r="2"/><circle cx="272" cy="48" r="2"/></g>
+                </svg>
+                <div class="chart-legend"><span class="overall-key"><i></i>Overall</span><span class="intercity-key"><i></i>Intercity</span><span class="commuter-key"><i></i>Commuter</span><span class="freight-key"><i></i>Freight</span></div>
+              </div>
+            </section>
+            <section class="panel live-board">
+              <div class="panel-head"><h2>LIVE TRAIN BOARD</h2><a href="#trains">View All Trains</a></div>
+              <table class="train-table"><thead><tr><th>TRAIN NO.</th><th>SERVICE</th><th>FROM</th><th>TO</th><th>DEPARTURE</th><th>STATUS</th><th>DELAY</th><th>PLATFORM</th><th>SPEED</th></tr></thead><tbody>
+                <tr><td class="blue-text">KA 03</td><td>Argo Bromo Anggrek</td><td>Jakarta Gambir</td><td>Surabaya Gubeng</td><td>09:00</td><td><span class="badge green">On Time</span></td><td>–</td><td>5</td><td>120 km/h</td></tr>
+                <tr><td class="blue-text">KA 272</td><td>Taksaka</td><td>Yogyakarta</td><td>Jakarta Gambir</td><td>09:15</td><td><span class="badge amber">Delayed</span></td><td class="red-text">+45 min</td><td>3</td><td>87 km/h</td></tr>
+                <tr><td class="blue-text">KA 142</td><td>Gajayana</td><td>Malang</td><td>Jakarta Gambir</td><td>09:25</td><td><span class="badge green">On Time</span></td><td>–</td><td>2</td><td>105 km/h</td></tr>
+                <tr><td class="blue-text">KA 38</td><td>Fajar Utama</td><td>Solo Balapan</td><td>Pasar Senen</td><td>09:30</td><td><span class="badge red">Stopped</span></td><td>–</td><td>7</td><td>0 km/h</td></tr>
+                <tr><td class="blue-text">KA 276</td><td>Sembrani</td><td>Surabaya Pasar Turi</td><td>Jakarta Gambir</td><td>09:35</td><td><span class="badge green">On Time</span></td><td>–</td><td>4</td><td>95 km/h</td></tr>
+                <tr><td class="blue-text">KA 18</td><td>Argo Parahyangan</td><td>Bandung</td><td>Jakarta Gambir</td><td>09:40</td><td><span class="badge green">On Time</span></td><td>–</td><td>6</td><td>110 km/h</td></tr>
+                <tr><td class="blue-text">KA 704</td><td>Siliwangi</td><td>Cipatat</td><td>Sukabumi</td><td>09:45</td><td><span class="badge green">On Time</span></td><td class="red-text">+15 min</td><td>1</td><td>78 km/h</td></tr>
+                <tr><td class="blue-text">KA 09</td><td>Argo Muria</td><td>Semarang Tawang</td><td>Jakarta Gambir</td><td>09:50</td><td><span class="badge green">On Time</span></td><td>–</td><td>2</td><td>114 km/h</td></tr>
+              </tbody></table>
+            </section>
+          </div>
+
+          <div class="left-bottom-row">
+            <section class="panel compact-panel stock-panel">
+              <div class="panel-head"><h2>ROLLING STOCK UTILIZATION</h2></div>
+              <div class="compact-donut-wrap"><div class="donut small-donut stock-donut"><div><strong>78%</strong></div></div><div class="tiny-stat"><span class="stock-current"><b><i class="green-square"></i> 679</b> /2,145 <em>90%</em></span><small>1,678 / 2,145</small></div></div>
+              <div class="stock-lines"><div><span>Locomotive</span><b>201 / 251</b><em>80%</em></div><div><span>Passenger Cars</span><b>1,102 / 1,450</b><em>76%</em></div><div><span>Freight Cars</span><b>375 / 540</b><em>69%</em></div></div>
+            </section>
+            <section class="panel compact-panel occupancy-panel">
+              <div class="panel-head"><h2>TRACK OCCUPANCY</h2></div>
+              <div class="compact-donut-wrap"><div class="donut small-donut track-donut"><div><strong>62%</strong><span>Main Line</span></div></div></div>
+              <div class="occupancy-lines"><div><i class="green-square"></i><span>Main Line</span><b>62%</b></div><div><i class="yellow-square"></i><span>Branch Line</span><b>48%</b></div><div><i class="gray-square"></i><span>Yard</span><b>71%</b></div></div>
+            </section>
+            <section class="panel compact-panel maintenance-panel">
+              <div class="panel-head"><h2>MAINTENANCE OVERVIEW</h2><a href="#maintenance">View All</a></div>
+              <div class="maintenance-body"><div class="maintenance-list"><div><svg class="maint-icon bell-line" viewBox="0 0 24 24"><use href="#i-bell"/></svg><span>Due Today</span><b>23</b></div><div class="overdue"><svg class="maint-icon alert-line" viewBox="0 0 24 24"><use href="#i-alert"/></svg><span>Overdue</span><b>5</b></div><div><svg class="maint-icon blue-line" viewBox="0 0 24 24"><use href="#i-clipboard"/></svg><span>In Progress</span><b>18</b></div><div><svg class="maint-icon green-line" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m8 12 3 3 5-6"/></svg><span>Completed Today</span><b>31</b></div></div><div class="donut maintenance-donut"><div><strong>77</strong><span>Total</span></div></div></div>
+              <div class="maintenance-key"><span><i class="blue-square"></i>Preventive <b>45 (58%)</b></span><span><i class="blue-square dark"></i>Corrective <b>22 (29%)</b></span><span><i class="yellow-square"></i>Predictive <b>10 (13%)</b></span></div>
+            </section>
+            <section class="panel compact-panel incident-panel">
+              <div class="panel-head"><h2>RECENT INCIDENTS</h2><a href="#incidents">View All</a></div>
+              <div class="incidents-list"><div class="incident-row"><i class="incident-dot red"></i><time>09:40</time><span>Signal failure on track<small>Tangerang - Duri KM 23+400</small></span><b class="severity high">↑ High</b></div><div class="incident-row"><i class="incident-dot amber"></i><time>09:22</time><span>Overhead line inspection<small>Depok - Cikayam section</small></span><b class="severity medium">Medium</b></div><div class="incident-row"><i class="incident-dot blue"></i><time>09:10</time><span>Passenger complaint<small>AC not working on KA 142</small></span><b class="severity low">Low</b></div><div class="incident-row"><i class="incident-dot amber"></i><time>08:55</time><span>Track obstruction<small>Between Klaten - Solo Balapan</small></span><b class="severity medium">Medium</b></div></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="right-column">
+          <section class="panel alerts-panel">
+            <div class="panel-head"><h2>ACTIVE ALERTS</h2><a href="#alerts">View All <span>×</span></a></div>
+            <table class="alerts-table"><thead><tr><th>TIME</th><th>TYPE</th><th>ALERT</th><th>LOCATION</th><th>SEVERITY</th></tr></thead><tbody>
+              <tr><td>09:40</td><td><span class="alert-type critical">Signal Failure</span></td><td>Signal malfunction on track</td><td>Tangerang - Duri</td><td><span class="severity-tag high">High</span></td></tr>
+              <tr><td>09:35</td><td><span class="alert-type delay">Delay</span></td><td>KA 272 delayed 45 min</td><td>Cirebon - Tegal</td><td><span class="severity-tag medium">Medium</span></td></tr>
+              <tr><td>09:28</td><td><span class="alert-type maintenance">Maintenance</span></td><td>Track maintenance ongoing</td><td>Km 117+400</td><td><span class="severity-tag medium">Medium</span></td></tr>
+              <tr><td>09:22</td><td><span class="alert-type equipment">Equipment</span></td><td>Locomotive inspection due</td><td>Surabaya Gubeng</td><td><span class="severity-tag low">Low</span></td></tr>
+              <tr><td>09:18</td><td><span class="alert-type weather">Weather</span></td><td>Heavy rain warning</td><td>Padang</td><td><span class="severity-tag low">Low</span></td></tr>
+            </tbody></table>
+          </section>
+          <section class="panel weather-panel">
+            <div class="panel-head"><h2>WEATHER OVERVIEW</h2><a href="#weather">View Map <span>×</span></a></div>
+            <div class="weather-grid">
+              <div class="weather-card"><b>Jakarta</b><span class="weather-icon rain"><svg aria-hidden="true"><use href="#w-rain"/></svg></span><strong>28°C</strong><small>Light Rain</small><small>Wind 12 km/h</small><small>Humidity 83%</small></div>
+              <div class="weather-card"><b>Bandung</b><span class="weather-icon cloudy"><svg aria-hidden="true"><use href="#w-cloudy"/></svg></span><strong>24°C</strong><small>Cloudy</small><small>Wind 8 km/h</small><small>Humidity 88%</small></div>
+              <div class="weather-card"><b>Surabaya</b><span class="weather-icon sunny"><svg aria-hidden="true"><use href="#w-partly"/></svg></span><strong>30°C</strong><small>Partly Cloudy</small><small>Wind 15 km/h</small><small>Humidity 74%</small></div>
+              <div class="weather-card"><b>Medan</b><span class="weather-icon storm"><svg aria-hidden="true"><use href="#w-storm"/></svg></span><strong>27°C</strong><small>Thunderstorm</small><small>Wind 18 km/h</small><small>Humidity 90%</small></div>
+              <div class="weather-card"><b>Makassar</b><span class="weather-icon rain"><svg aria-hidden="true"><use href="#w-rain"/></svg></span><strong>29°C</strong><small>Rain</small><small>Wind 20 km/h</small><small>Humidity 85%</small></div>
+            </div>
+          </section>
+          <section class="panel actions-panel">
+            <div class="panel-head"><h2>QUICK ACTIONS</h2></div>
+            <div class="actions-grid"><button><svg><use href="#i-search"/></svg><span>Train Search</span></button><button><svg><use href="#i-megaphone"/></svg><span>Add Announcement</span></button><button><svg><use href="#i-dispatch"/></svg><span>Dispatch Train</span></button><button><svg><use href="#i-wrench"/></svg><span>Create Work Order</span></button><button class="danger"><svg><use href="#i-alert"/></svg><span>Emergency Alert</span></button><button><svg><use href="#i-report"/></svg><span>Generate Report</span></button></div>
+          </section>
+          <section class="panel passenger-panel">
+            <div class="panel-head"><h2>PASSENGER FLOW (TODAY)</h2><span class="live-tag"><i></i> Live</span></div>
+            <div class="flow-head"><span>STATION</span><span>ARRIVALS</span><span>DEPARTURES</span><span>TOTAL</span></div>
+            <div class="flow-row"><span>Jakarta Gambir</span><div class="flow-metric"><span>24,567</span><div class="flow-bar"><b style="width:100%"></b></div></div><div class="flow-metric departure"><div class="flow-bar"><b style="width:100%"></b><em>25,430</em></div></div><strong>49,997</strong></div>
+            <div class="flow-row"><span>Pasar Senen</span><div class="flow-metric"><span>18,234</span><div class="flow-bar"><b style="width:75%"></b></div></div><div class="flow-metric departure"><div class="flow-bar"><b style="width:78%"></b><em>19,876</em></div></div><strong>38,110</strong></div>
+            <div class="flow-row"><span>Bandung</span><div class="flow-metric"><span>15,678</span><div class="flow-bar"><b style="width:63%"></b></div></div><div class="flow-metric departure"><div class="flow-bar"><b style="width:68%"></b><em>16,234</em></div></div><strong>31,912</strong></div>
+            <div class="flow-row"><span>Surabaya Gubeng</span><div class="flow-metric"><span>20,456</span><div class="flow-bar"><b style="width:87%"></b></div></div><div class="flow-metric departure"><div class="flow-bar"><b style="width:95%"></b><em>20,123</em></div></div><strong>40,579</strong></div>
+            <div class="flow-row"><span>Yogyakarta</span><div class="flow-metric"><span>12,345</span><div class="flow-bar"><b style="width:53%"></b></div></div><div class="flow-metric departure"><div class="flow-bar"><b style="width:57%"></b><em>13,210</em></div></div><strong>25,555</strong></div>
+            <div class="flow-total"><span>Total</span><b>91,280</b><strong>94,873</strong><b>186,153</b></div>
+          </section>
+          <div class="right-bottom-row">
+            <section class="panel energy-panel">
+              <div class="panel-head"><h2>ENERGY CONSUMPTION</h2><button class="period-select">Today⌄</button></div>
+              <div class="energy-value">98,765 kWh <small>▼ 3.2% <em>vs yesterday</em></small></div>
+              <div class="energy-chart"><div class="energy-y"><span>40k</span><span>30k</span><span>20k</span><span>10k</span><span>0</span></div><div class="bars"> <i style="height:43%"></i><i style="height:51%"></i><i style="height:43%"></i><i style="height:52%"></i><i style="height:64%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:78%"></i><i style="height:72%"></i><i style="height:68%"></i><i style="height:69%"></i><i style="height:74%"></i><i style="height:82%"></i><i style="height:72%"></i><i style="height:84%"></i><i style="height:78%"></i><i style="height:74%"></i><i style="height:82%"></i><i style="height:70%"></i><i style="height:58%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:58%"></i><i style="height:48%"></i><i style="height:46%"></i><i style="height:54%"></i><i style="height:62%"></i><i style="height:77%"></i><i style="height:66%"></i><i style="height:61%"></i></div><div class="energy-x"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span><span>20</span><span>24</span></div></div>
+            </section>
+            <section class="panel health-panel">
+              <div class="panel-head"><h2>SYSTEM HEALTH</h2><a href="#system">View All <span>×</span></a></div>
+              <div class="health-list"><div><i></i><span>Ticketing System</span><b>Operational</b><strong>100%</strong></div><div><i></i><span>Signaling System</span><b>Operational</b><strong>98%</strong></div><div><i></i><span>Communication Network</span><b>Operational</b><strong>100%</strong></div><div><i></i><span>Power Supply</span><b>Operational</b><strong>97%</strong></div><div><i></i><span>CCTV System</span><b>Operational</b><strong>99%</strong></div><div><i></i><span>PA System</span><b>Operational</b><strong>100%</strong></div></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="announcement-bar">
+      <div class="announcement-label"><svg><use href="#i-megaphone"/></svg><b>SYSTEM ANNOUNCEMENTS</b></div>
+      <div class="ticker"><span><time>09:30</time>Track maintenance on Cirebon - Tegal section will continue until 18:00 WIB</span><span><time>09:15</time>Expect delays on Southern Line due to heavy rain</span><span><time>08:45</time>New timetable effective 1 June 2025. Click for details.</span></div>
+      <select aria-label="Theme"><option>Dark</option><option>Midnight</option></select>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
