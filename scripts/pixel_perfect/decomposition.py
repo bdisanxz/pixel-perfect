@@ -234,9 +234,10 @@ def build_decomposition(
         "workflow_policy": {
             "mode": "section-first" if section_first_required else "whole-page-allowed",
             "requires_named_sections": section_first_required,
-            "requires_analysis_crops": section_first_required,
+            "requires_analysis_crops": False,
             "full_page_compare": "final-only" if section_first_required else "allowed",
             "grid": "optional analysis artifact when coordinate precision is needed",
+            "visual_diagnostics": "opt-in via --diagnostic; crop remains an explicit analysis command",
         },
         "reference": {
             "path": str(reference_path.resolve()) if reference_path else reference.get("path"),
@@ -260,10 +261,10 @@ def build_decomposition(
         "workflow": [
             "Define or review section bounds and visual contracts before editing source.",
             "Render a complete full-page baseline before focused section work.",
-            "For section-first plans, crop the active section and optionally add a coordinate grid when precise measurement is needed.",
+            "For section-first plans, name the active section and materialize a crop only when precise measurement is needed.",
             "Implement one section in dependency order, starting with the global frame.",
             "Render and compare the active section plus previously accepted sections without using a full-page score as the implementation gate.",
-            "Repeat the crop, focused edit, render, and section comparison cycle for each section.",
+            "Repeat the focused edit, render, and section comparison cycle for each section; use crop or --diagnostic only when needed.",
             "Use full-page comparison only for final verification and regression review when section-first mode is required.",
             "Do not mark the decomposition ready until every section has an owner, state, acceptance criteria, and responsive behavior.",
         ],
@@ -285,6 +286,7 @@ def decomposition_markdown(plan: dict[str, Any]) -> str:
         f"- Section-first required: `{plan['workflow_policy']['requires_named_sections']}`",
         f"- Analysis crops required: `{plan['workflow_policy']['requires_analysis_crops']}`",
         f"- Full-page compare: `{plan['workflow_policy']['full_page_compare']}`",
+        f"- Visual diagnostics: `{plan['workflow_policy']['visual_diagnostics']}`",
         "- Grid overlay: optional analysis aid when precise coordinate measurement is needed.",
         "- Crops and grids are analysis artifacts only; never use them as runtime UI assets.",
         "",

@@ -82,6 +82,14 @@ def _add_iteration_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_diagnostic_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--diagnostic",
+        action="store_true",
+        help="Materialize visual diagnostic artifacts such as crops, overlays, diffs, and masks",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pixel-perfect",
@@ -221,6 +229,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_runtime_options(compare)
     _add_iteration_options(compare)
+    _add_diagnostic_option(compare)
     compare.add_argument("--reference", required=True, help="Reference image path")
     compare.add_argument("--candidate", required=True, help="Rendered candidate image path")
     compare.add_argument(
@@ -257,6 +266,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_runtime_options(verify)
     _add_iteration_options(verify)
+    _add_diagnostic_option(verify)
     verify.add_argument(
         "--final",
         action="store_true",
@@ -1381,7 +1391,7 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         points=points,
         regions_only=args.section_only,
     )
-    if args.section_only:
+    if args.diagnostic and args.section_only:
         artifacts = save_region_visual_artifacts(
             reference_image,
             candidate_image,
@@ -1389,10 +1399,12 @@ def _cmd_compare(args: argparse.Namespace) -> int:
             output_dir,
             tolerance=args.tolerance,
         )
-    else:
+    elif args.diagnostic:
         artifacts = save_visual_artifacts(
             reference_image, candidate_image, output_dir, tolerance=args.tolerance
         )
+    else:
+        artifacts = {}
     report["visual_artifacts"] = artifacts
     reports = write_comparison_reports(report, output_dir)
     ledger_paths = _record_iteration_event(
@@ -1410,6 +1422,7 @@ def _cmd_compare(args: argparse.Namespace) -> int:
             },
             "comparison_scope": report["comparison_scope"],
             "section_ids": [name for name, _ in regions],
+            "diagnostic": args.diagnostic,
         },
     )
     _pointer(
@@ -1441,6 +1454,7 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         ),
         viewport=report["viewport"],
         comparison_scope=report["comparison_scope"],
+        diagnostic=args.diagnostic,
         **_iteration_context_pointer(context),
     )
     return 0
@@ -1682,7 +1696,7 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         points=points,
         regions_only=args.section_only,
     )
-    if args.section_only:
+    if args.diagnostic and args.section_only:
         artifacts = save_region_visual_artifacts(
             reference_image,
             candidate_image,
@@ -1690,10 +1704,12 @@ def _cmd_verify(args: argparse.Namespace) -> int:
             output_dir,
             tolerance=args.tolerance,
         )
-    else:
+    elif args.diagnostic:
         artifacts = save_visual_artifacts(
             reference_image, candidate_image, output_dir, tolerance=args.tolerance
         )
+    else:
+        artifacts = {}
     report["visual_artifacts"] = artifacts
     comparison_reports = write_comparison_reports(report, output_dir)
     candidate_report: Path | None = None
@@ -1791,6 +1807,7 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         "reference": str(reference.resolve()),
         "checks": checks,
         "comparison": report,
+        "diagnostic": args.diagnostic,
         "artifacts": artifacts,
         "reports": comparison_reports,
         "smoke": smoke,
@@ -1824,6 +1841,7 @@ def _cmd_verify(args: argparse.Namespace) -> int:
             },
             "comparison_scope": report["comparison_scope"],
             "section_ids": [name for name, _ in regions],
+            "diagnostic": args.diagnostic,
             "failed_checks": [check["name"] for check in checks if check["status"] != "pass"],
         },
     )
@@ -1877,6 +1895,7 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         ),
         viewport=viewport,
         comparison_scope=report["comparison_scope"],
+        diagnostic=args.diagnostic,
         failed_checks=[check["name"] for check in checks if check["status"] != "pass"],
         **_iteration_context_pointer(context),
         **({"final": True} if args.final else {}),

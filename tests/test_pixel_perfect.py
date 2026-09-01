@@ -90,21 +90,14 @@ class IterationArtifactTests(unittest.TestCase):
                 iteration.directory,
                 (page_dir / "iterations/001-map-map-panel-boundary").resolve(),
             )
-            with self.assertRaises(IterationError):
-                append_iteration_event(page_dir, iteration, "render", {})
-
-            append_iteration_event(
-                page_dir,
-                iteration,
-                "crop",
-                {"status": "cropped", "artifacts": {"manifest": iteration.directory / "crop.json"}},
-            )
             append_iteration_event(
                 page_dir,
                 iteration,
                 "render",
                 {"status": "rendered", "artifacts": {"candidate": iteration.directory / "candidate.png"}},
             )
+            with self.assertRaises(IterationError):
+                append_iteration_event(page_dir, iteration, "crop", {})
             ledger_paths = append_iteration_event(
                 page_dir,
                 iteration,
@@ -122,7 +115,7 @@ class IterationArtifactTests(unittest.TestCase):
             ledger = json.loads(Path(ledger_paths["json"]).read_text(encoding="utf-8"))
             self.assertEqual(
                 [event["operation"] for event in ledger["iterations"][1]["events"]],
-                ["crop", "render", "compare"],
+                ["render", "compare"],
             )
             self.assertEqual(ledger["iterations"][1]["focus"], "map")
             self.assertEqual(ledger["iterations"][1]["hypothesis"], "map-panel-boundary")
@@ -400,12 +393,6 @@ class WorkspaceStorageTests(unittest.TestCase):
                 note="Measure the sidebar boundary.",
             )
             iteration.directory.mkdir(parents=True)
-            append_iteration_event(
-                page_dir,
-                iteration,
-                "crop",
-                {"artifacts": {"manifest": iteration.directory / "crop.json"}},
-            )
             candidate = iteration.directory / "candidate.png"
             with Image.open(COMPLEX_FIXTURE) as image:
                 image.save(candidate)
@@ -455,7 +442,7 @@ class WorkspaceStorageTests(unittest.TestCase):
             ledger = json.loads((page_dir / "iterations.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 [event["operation"] for event in ledger["iterations"][1]["events"]],
-                ["crop", "render", "compare"],
+                ["render", "compare"],
             )
 
     def test_inspect_cli_returns_only_a_report_pointer(self):
@@ -548,13 +535,11 @@ class WorkspaceStorageTests(unittest.TestCase):
                 Path(pointer["reports"]["json"]["output_path"]).read_text(encoding="utf-8")
             )
             self.assertEqual(comparison["metrics"]["mean_abs_error"], 0)
-            diff_path = Path(pointer["artifacts"]["diff"]["output_path"])
-            self.assertTrue(diff_path.is_file())
-            self.assertEqual(
-                diff_path.parent,
-                (workspace / ".artifacts/pixel-perfect/dashboard/iteration-06").resolve(),
+            self.assertEqual(comparison["visual_artifacts"], {})
+            self.assertNotIn("artifacts", pointer)
+            self.assertFalse(
+                (workspace / ".artifacts/pixel-perfect/dashboard/iteration-06/diff.png").exists()
             )
-            self.assertIn("description", pointer["artifacts"]["diff"])
             candidate_path = Path(pointer["candidate"]["output_path"])
             self.assertEqual(
                 candidate_path.parent,
@@ -562,6 +547,56 @@ class WorkspaceStorageTests(unittest.TestCase):
             )
             self.assertTrue(candidate_path.is_file())
             self.assertIn("description", pointer["candidate"])
+
+    def test_compare_cli_materializes_visual_artifacts_with_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            project = workspace / "project"
+            project.mkdir()
+            reference = workspace / "reference.png"
+            candidate = workspace / "candidate.png"
+            Image.new("RGB", (8, 6), "#101820").save(reference)
+            Image.new("RGB", (8, 6), "#101820").save(candidate)
+            runtime_path = runtime_directory(workspace)
+            venv.EnvBuilder(with_pip=False).create(runtime_path)
+            original_cwd = Path.cwd()
+            try:
+                os.chdir(workspace)
+                stdout = StringIO()
+                with redirect_stdout(stdout):
+                    status = cli_main(
+                        [
+                            "compare",
+                            "--page-name",
+                            "dashboard",
+                            "--diagnostic",
+                            "--runtime-ready",
+                            "--no-auto-setup",
+                            "--project-root",
+                            "project",
+                            "--reference",
+                            "reference.png",
+                            "--candidate",
+                            "candidate.png",
+                            "--output-dir",
+                            ".artifacts/pixel-perfect/iteration-07",
+                        ]
+                    )
+            finally:
+                os.chdir(original_cwd)
+            self.assertEqual(status, 0)
+            pointer = json.loads(stdout.getvalue())
+            self.assertEqual(pointer["diagnostic"], True)
+            diff_path = Path(pointer["artifacts"]["diff"]["output_path"])
+            self.assertTrue(diff_path.is_file())
+            self.assertEqual(
+                diff_path.parent,
+                (workspace / ".artifacts/pixel-perfect/dashboard/iteration-07").resolve(),
+            )
+            comparison = json.loads(
+                Path(pointer["reports"]["json"]["output_path"]).read_text(encoding="utf-8")
+            )
+            self.assertEqual(comparison["visual_artifacts"]["diff"], str(diff_path))
 
     def test_final_verify_writes_only_to_final_directory(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -602,9 +637,13 @@ class WorkspaceStorageTests(unittest.TestCase):
             pointer = json.loads(stdout.getvalue())
             final_dir = workspace / ".artifacts/pixel-perfect/dashboard/final"
             self.assertTrue(pointer["final"])
+            self.assertNotIn("artifacts", pointer)
             self.assertEqual(Path(pointer["candidate"]["output_path"]).parent, final_dir.resolve())
             self.assertEqual(Path(pointer["reports"]["candidate_json"]["output_path"]).parent, final_dir.resolve())
             self.assertTrue((final_dir / "verification.json").is_file())
+            verification = json.loads((final_dir / "verification.json").read_text(encoding="utf-8"))
+            self.assertEqual(verification["artifacts"], {})
+            self.assertFalse((final_dir / "overlay.png").exists())
             self.assertFalse((workspace / ".artifacts/pixel-perfect/dashboard/verification.json").exists())
 
     def test_cli_error_returns_a_persisted_error_pointer(self):
@@ -826,8 +865,9 @@ class WorkspaceStorageTests(unittest.TestCase):
                 (workspace / ".artifacts/pixel-perfect/complex-dashboard/crops/header/reference-grid.png").is_file()
             )
             self.assertEqual(compare_pointer["comparison_scope"], "regions")
-            self.assertNotIn("overlay", compare_pointer["artifacts"])
+            self.assertNotIn("artifacts", compare_pointer)
             self.assertEqual(verify_pointer["comparison_scope"], "regions")
+            self.assertNotIn("artifacts", verify_pointer)
             comparison = json.loads(
                 Path(compare_pointer["reports"]["json"]["output_path"]).read_text(encoding="utf-8")
             )
@@ -887,7 +927,8 @@ class ComplexFixtureWorkflowTests(unittest.TestCase):
         )
         self.assertEqual(reference["viewport"], "1536x1024")
         self.assertEqual(plan["complexity"]["classification"], "complex")
-        self.assertTrue(plan["workflow_policy"]["requires_analysis_crops"])
+        self.assertFalse(plan["workflow_policy"]["requires_analysis_crops"])
+        self.assertIn("--diagnostic", plan["workflow_policy"]["visual_diagnostics"])
         self.assertEqual(plan["workflow_policy"]["full_page_compare"], "final-only")
 
     def test_complex_fixture_crop_and_grid_keep_source_coordinates(self):

@@ -16,12 +16,13 @@ Use this skill when a user asks to implement, reproduce, or closely match a UI f
 The skill captures the useful behavior from a high-fidelity implementation session without copying its accidental weaknesses:
 
 ```text
-inspect -> decompose -> full-page baseline render -> crop active section
-       -> optional grid -> implement one section -> render -> compare crop
-       -> repeat incrementally -> full-page verify -> interactions -> cleanup
+inspect -> decompose -> full-page baseline render -> name active section
+       -> optional crop/grid -> implement one section -> render -> compare
+       -> optional --diagnostic -> repeat incrementally
+       -> full-page verify -> interactions -> cleanup
 ```
 
-The host agent performs the implementation directly in the current checkout. The bundled CLI performs repeatable mechanics; it never edits source code or invents a replacement architecture. The agent is responsible for deciding the next smallest source edit from the evidence. For complex references, the agent works section-first: capture one full-page baseline, then crop and compare each active section incrementally; reserve full-page comparison for final acceptance.
+The host agent performs the implementation directly in the current checkout. The bundled CLI performs repeatable mechanics; it never edits source code or invents a replacement architecture. The agent is responsible for deciding the next smallest source edit from the evidence. For complex references, the agent works section-first: capture one full-page baseline, compare named sections incrementally, and materialize crops or other visual diagnostics only when the evidence requires them; reserve full-page comparison for final acceptance.
 
 ## Non-negotiable behavior
 
@@ -34,7 +35,7 @@ The host agent performs the implementation directly in the current checkout. The
 7. **Keep the loop bounded.** Use a configured iteration cap and stop after a metric plateau. Report remaining mismatch honestly; never claim pixel identity from an unverified visual impression.
 8. **Verify behavior separately.** Visual similarity does not prove that navigation, controls, keyboard access, or application behavior still works.
 
-For a complex reference, do not use a full-page score as the sole implementation gate. Use `crop` and `compare --section-only` (or `verify --section-only`) for the active section plus previously accepted sections. A full-page comparison remains required during final verification.
+For a complex reference, do not use a full-page score as the sole implementation gate. Use named regions with `compare --section-only` (or `verify --section-only`) for the active section plus previously accepted sections. Run `crop` only when coordinate-level image evidence is needed, and add `--diagnostic` to materialize visual comparison artifacts. A full-page comparison remains required during final verification.
 
 ## Reference-image use rule
 
@@ -60,7 +61,7 @@ The runtime installs Pillow and NumPy. Pillow is required for image I/O; NumPy i
 
 Do not install packages globally. Do not add the runtime, generated screenshots, or reports to the implementation commit. **Every file created by the pixel-perfect process must remain below `<cwd>/.artifacts/pixel-perfect/`.** This includes screenshots, reference snapshots, crops, grids, overlays, diffs, JSON/Markdown reports, ledgers, errors, scratch diagnostics, installer caches, browser downloads, and temporary files. Never write process output to `/tmp/`, the project checkout, a home-directory cache, or another workspace. The original reference is a read-only input; implementation source remains project-owned, but the process never writes generated evidence there. If a process copy is needed, the CLI stores it under the artifact root. Pass `--page-name PAGE_NAME` to select the page directory; when omitted, the CLI uses the reference filename stem, or `default` when no reference exists.
 
-### Mandatory semantic artifact contract
+### Semantic artifact contract
 
 Do not invent filenames or directories for a visual run. Use this canonical shape:
 
@@ -73,7 +74,7 @@ Do not invent filenames or directories for a visual run. Use this canonical shap
     inspection.json
     decomposition.json
     decomposition.md
-    sections.json                   # stable section IDs and bounds; no iteration suffixes
+    sections.json                   # stable section IDs and bounds when sections are used
     iterations.json                  # ordered event ledger
     iterations.md
     iterations/
@@ -82,15 +83,13 @@ Do not invent filenames or directories for a visual run. Use this canonical shap
         candidate.json
       001-<section-id>-<hypothesis-slug>/
         manifest.json                    # current iteration metadata and event trace
-        crop.json
-        crop.md
-        crop-candidate.png                 # optional candidate snapshot used only by crop
-        crops/<section-id>/reference.png
-        crops/<section-id>/candidate.png       # only when a candidate was supplied
-        crops/<section-id>/*-grid.png          # optional analysis-only grids
+        crop.json                        # only when crop is explicitly run
+        crop.md                          # only when crop is explicitly run
+        crop-candidate.png               # only when crop is explicitly run with a candidate
+        crops/<section-id>/...            # only when crop is explicitly run
         candidate.png
         candidate.json
-        sections/<section-id>/{reference,candidate,overlay,diff,threshold-mask}.png
+        sections/<section-id>/{reference,candidate,overlay,diff,threshold-mask}.png  # only with --diagnostic
         comparison.json
         comparison.md
         verification.json                     # optional focused verification
@@ -104,6 +103,9 @@ Do not invent filenames or directories for a visual run. Use this canonical shap
       comparison.md
       verification.json
       verification.md
+      overlay.png                              # only with --diagnostic
+      diff.png                                 # only with --diagnostic
+      threshold-mask.png                       # only with --diagnostic
       responsive-001.png                       # optional smoke captures
       errors/<command>-error-<timestamp>-<pid>.json
     errors/<command>-error-<timestamp>-<pid>.json  # legacy/lifecycle failures
@@ -112,10 +114,10 @@ Do not invent filenames or directories for a visual run. Use this canonical shap
 Rules:
 
 1. `000-baseline` is the only baseline name. Every focused attempt gets the next zero-padded integer and one stable decomposition section ID: `001-map-panel-boundary`, never `iter-01`, `map26`, `test-foo`, timestamps, or arbitrary root-level names.
-2. One iteration represents one hypothesis/source edit. The CLI records `crop -> render -> compare` (or focused `verify`) in `iterations.json` and the iteration's `manifest.json`; do not reuse an iteration after its event is written. A failed hypothesis starts the next number.
+2. One iteration represents one hypothesis/source edit. The CLI records `[crop] -> render -> compare` (or focused `verify`) in `iterations.json` and the iteration's `manifest.json`; `crop` is optional and visual diagnostics are opt-in with `--diagnostic`. Do not reuse an iteration after its event is written. A failed hypothesis starts the next number.
 3. Keep section IDs stable and sourced from `decomposition.json`/`sections.json`. Never encode iteration numbers, attempts, parameter values, or timestamps into section IDs or crop directory names.
 4. Use `--iteration`, `--focus`, `--hypothesis`, and `--iteration-note` for focused commands. The CLI derives the directory and rejects gaps, duplicate events, conflicting metadata, overwrites, and `--output-dir` overrides. Use `--final` for the final full-page verification; do not place final artifacts at the page root.
-5. Grids, crops, overlays, diffs, threshold masks, and debug probes are analysis-only. They must stay in the current page/iteration tree and must never be copied into runtime UI assets or source files.
+5. Grids, crops, overlays, diffs, threshold masks, and debug probes are analysis-only. `crop` and `--diagnostic` create them only when explicitly requested. They must stay in the current page/iteration tree and must never be copied into runtime UI assets or source files.
 6. Do not create `analysis/`, `test-*`, `iter-*`, `landcomp*`, `map-blend*`, or any other scratch sweep. If a bounded diagnostic is necessary, put it under the current iteration's `debug/<purpose>/` directory with a semantic name and record its purpose in the iteration note.
 7. The page root is reserved for the fixed lifecycle files shown above. Do not add arbitrary `.png`, `.json`, `.md`, or timestamp files there. The only process tree outside a page is the shared `.runtime/` under `.artifacts/pixel-perfect/`.
 8. Before completion, inspect the artifact tree and confirm every process-created path has the `.artifacts/pixel-perfect/` prefix. A path under `/tmp/` is a contract violation even if it is later copied into the artifact tree.
@@ -129,7 +131,7 @@ Rules:
 | `decompose` | Create a structured, text-readable section plan before source edits. |
 | `crop` | Create page-scoped analysis crops and optional coordinate-grid overlays; automatically create or append `sections.json`. |
 | `render` | Capture one viewport-sized screenshot using system Chrome/Chromium or Playwright. |
-| `compare` | Produce full-page or focused-section metrics, mismatch diagnosis, visual artifacts, JSON, and Markdown. |
+| `compare` | Produce full-page or focused-section metrics and mismatch diagnosis; visual artifacts are opt-in with `--diagnostic`. |
 | `verify` | Render when necessary, compare, smoke-check, run optional responsive checks, and return an acceptance exit code. |
 
 Common options:
@@ -150,7 +152,8 @@ Common options:
 - `--entry PATH` — local entrypoint relative to the project root.
 - `--browser PATH|playwright` — select a browser explicitly.
 - `--region name=x,y,width,height` — compare a named layout region (repeatable).
-- `--section-only` — compare named sections only and omit full-page metrics/artifacts. Requires `--region`, `--sections-file`, or a generated page-scoped `sections.json`.
+- `--section-only` — compare named sections only and omit full-page metrics. Requires `--region`, `--sections-file`, or a generated page-scoped `sections.json`.
+- `--diagnostic` — with `compare` or `verify`, materialize visual diagnostics only for the requested section/region; without it, visual diagnostics are not written.
 - `--grid` — with `crop`, write optional enlarged coordinate-grid artifacts; use `--grid-axis vertical|horizontal|both` and `--grid-spacing N` as needed.
 - `--point x,y` — include an exact pixel probe in the text report (repeatable).
 
@@ -164,7 +167,7 @@ Defaults that make this contract consistent:
 
 - `inspect` writes `.artifacts/pixel-perfect/<page_name>/inspection.json` and snapshots the reference as `reference.png` when `--output` is omitted.
 - The compatibility default for `render` is `.artifacts/pixel-perfect/<page_name>/candidate.png`; for an actual visual run, use `--iteration 000` so the baseline is stored at `iterations/000-baseline/candidate.png`.
-- `crop`, `render`, `compare`, and focused `verify` with `--iteration` write only inside the derived numbered iteration directory and append `iterations.json`/`iterations.md` in the page root.
+- `crop`, `render`, `compare`, and focused `verify` with `--iteration` write only inside the derived numbered iteration directory and append `iterations.json`/`iterations.md` in the page root. Focused iteration order is `[crop] -> render -> compare/verify`; omitting `crop` avoids crop PNGs.
 - Final `verify --final` writes all final evidence under `.artifacts/pixel-perfect/<page_name>/final/`.
 - `decompose` and lifecycle inspection reports stay under `.artifacts/pixel-perfect/<page_name>/`; optional legacy output directories remain page-scoped, but agents must not use them for canonical iteration evidence.
 
@@ -194,7 +197,7 @@ Each returned file uses an object with `output_path` and `description`. The poin
 }
 ```
 
-A focused comparison omits full-page overlay/diff artifacts. Its artifact pointers and `visual_artifacts` map contain per-section crops, overlays, diffs, and threshold masks instead.
+A focused comparison omits full-page overlay/diff artifacts. With `--diagnostic`, its artifact pointers and `visual_artifacts` map contain per-section crops, overlays, diffs, and threshold masks; without `--diagnostic`, that map is empty.
 
 ### Recommended command sequence
 
@@ -224,7 +227,8 @@ python /path/to/pixel-perfect/scripts/pixel-perfect.py render \
   --iteration 0
 
 # The CLI creates/updates the stable page-scoped sections.json automatically.
-# Start each focused hypothesis with the next number and crop before editing.
+# Start each focused hypothesis with the next number; run crop only when precise
+# coordinate evidence is needed.
 python /path/to/pixel-perfect/scripts/pixel-perfect.py crop \
   --project-root . \
   --page-name dashboard \
@@ -256,8 +260,11 @@ python /path/to/pixel-perfect/scripts/pixel-perfect.py compare \
   --iteration 1 \
   --focus sidebar \
   --hypothesis sidebar-boundary \
-  --section-only
+  --section-only \
+  --diagnostic
 ```
+
+The example requests visual diagnostics explicitly. Omit `--diagnostic` for the lean path; metrics and metadata are still written.
 
 For a static local entrypoint, omit `--url` and pass `--entry index.html` (or let the CLI discover `index.html` under `--project-root`). For a framework application, use the project's normal dev server and pass its URL; do not make the CLI guess a port. A local file supplied through `--url` is resolved relative to `<cwd>` unless absolute.
 
@@ -275,7 +282,7 @@ python /path/to/pixel-perfect/scripts/pixel-perfect.py verify \
   --min-within-tolerance 0.85
 ```
 
-The command writes its candidate, comparison, verification, full-page `overlay.png`/`diff.png`/`threshold-mask.png`, and responsive smoke screenshots below `final/`. A focused iteration writes `crop.json`, `crop.md`, exact reference/candidate crops, optional grid overlays, section diagnostics, and its comparison/verification reports below its numbered directory; the CLI also appends its event to `iterations.json`/`iterations.md`. For comparison output, read `comparison.md` first because it is the concise diagnostic summary; open the usually much larger `comparison.json` only when exact metrics, probes, regions, scanlines, or tile details are needed. For verification output, read `verification.md` first and open `verification.json` only for deeper evidence. Do not rely on the generated image being visible to the model.
+The command writes its candidate, comparison, verification, and responsive smoke screenshots below `final/`. Add `--diagnostic` when full-page overlay/diff/mask evidence is needed. A focused iteration writes `crop.json`, `crop.md`, exact reference/candidate crops, optional grid overlays, and section diagnostics only when `crop` or `--diagnostic` is explicitly requested; its comparison/verification reports and iteration metadata are always written. For comparison output, read `comparison.md` first because it is the concise diagnostic summary; open the usually much larger `comparison.json` only when exact metrics, probes, regions, scanlines, or tile details are needed. For verification output, read `verification.md` first and open `verification.json` only for deeper evidence. Do not rely on the generated image being visible to the model.
 
 ### Rich section definitions
 
@@ -385,15 +392,15 @@ Prefer the section plan's `verification_region` values for comparison. Regions s
 
 Use the section-first path when `decomposition.json` marks the reference `complex`, when `workflow_policy.requires_named_sections` is `true`, or when the page is visually dense enough that a whole-page comparison cannot isolate the cause. A short but dense reference can opt in with `decompose --section-first`. Simple references may use the regular full-page path, but meaningful independent regions should still be named when they improve diagnosis.
 
-Follow this order exactly:
+Follow this order exactly; the crop step is optional:
 
 1. Decompose the reference into meaningful implementation sections.
 2. Create one complete full-page baseline render at the target viewport as iteration `000`. This baseline is orientation evidence, not the focused acceptance gate.
-3. Start the next sequential iteration with `--iteration N --focus SECTION_ID --hypothesis SLUG --iteration-note TEXT`. Run `crop` first; it creates or appends the page-scoped `sections.json` automatically. Do not hand-author that file for ordinary crop work.
+3. Start the next sequential iteration with `--iteration N --focus SECTION_ID --hypothesis SLUG --iteration-note TEXT`. Run `crop` only when coordinate-level evidence is needed; when used, it creates or appends the page-scoped `sections.json` automatically. Otherwise render first. Do not hand-author that file for ordinary crop work.
 4. Add a grid overlay only when coordinate precision is needed. Use `--grid`, `--grid-spacing`, and `--grid-axis vertical|horizontal|both`; the overlay labels absolute source-image coordinates and is analysis-only.
 5. Implement one section or one diagnosed cause.
 6. Run `render` with the same iteration metadata; the CLI writes `candidate.png` inside that numbered directory.
-7. Run `compare --section-only` (or focused `verify`) with the active section and previously accepted sections. The CLI appends the event and all paths to `iterations.json`.
+7. Run `compare --section-only` (or focused `verify`) with the active section and previously accepted sections. Add `--diagnostic` only when visual artifacts are needed. The CLI appends the event and all paths to `iterations.json`.
 8. Never rerun or overwrite a completed event. If the hypothesis fails or another edit is needed, increment `N` and create a new semantic directory. Include previously accepted sections in the focused comparison to catch regressions.
 9. After all sections pass, run `verify --final` for the full-page gate, exercise interactions, inspect the artifact tree for path violations, remove temporary analysis artifacts from the source change, and commit the implementation.
 
@@ -410,17 +417,17 @@ Implement the smallest complete vertical slice that can render the whole target 
 - Use CSS layout primitives appropriate to the project. Absolute positioning is acceptable for a fixed mockup only when the contract is explicitly fixed; it is not a default for framework applications.
 - Keep the first pass observable: it must load at the target route and produce a screenshot.
 
-Render the baseline immediately and preserve its screenshot for orientation. For a complex reference, do not run a full-page comparison as the implementation gate at this stage; later iterations use the active and accepted section crops instead.
+Render the baseline immediately and preserve its screenshot for orientation. For a complex reference, do not run a full-page comparison as the implementation gate at this stage; later iterations use active and accepted named regions, with crops materialized only when needed.
 
 ### 5. Iterate with a diagnosis-first loop
 
 For each focused iteration, follow this exact order:
 
 1. Choose the next contiguous number and record `--focus`, `--hypothesis`, and `--iteration-note`; the CLI creates the semantic directory and ledger entry on the first event.
-2. Run `crop` (and optional `--grid`) for the active section before the source edit.
+2. If coordinate-level evidence is needed, run `crop` (and optional `--grid`) for the active section before the source edit.
 3. Make one focused source edit.
 4. Render with the same iteration metadata at the primary viewport.
-5. Run `compare --section-only` with the active section's `verification_region`, all previously accepted section regions, and the configured pixel tolerance. This writes per-section crops and diagnostics without calculating a full-page score. A focused `verify` may replace `compare` when its acceptance checks are needed.
+5. Run `compare --section-only` with the active section's `verification_region`, all previously accepted section regions, and the configured pixel tolerance. This calculates per-section metrics without writing visual artifacts unless `--diagnostic` is supplied. A focused `verify` may replace `compare` when its acceptance checks are needed.
 6. Read the text report and identify the highest-impact *single* mismatch class:
    - dimension/viewport mismatch;
    - global frame or panel boundary;
@@ -430,11 +437,11 @@ For each focused iteration, follow this exact order:
    - color, border, gradient, or shadow;
    - content or state;
    - interaction/runtime error.
-7. Use the focused crop's mismatch bounding box, row/column density, tile hotspots, edge peaks, per-channel error, and region metrics to localize the cause. Use the optional grid artifact for coordinate measurements when needed. Do not make a CSS change without a stated cause.
+7. Use the focused report's mismatch bounding box, row/column density, tile hotspots, edge peaks, per-channel error, and region metrics to localize the cause. Run `crop`, add `--diagnostic`, or both when image-level coordinate evidence is needed. Do not make a CSS change without a stated cause.
 8. Keep the edit only if the active section improves without an unacceptable regression in previously accepted sections; otherwise create the next iteration for the corrected hypothesis. Never rerender in-place after an event has been written.
 9. Update the section status and append the result to the progress log: change, evidence before/after, and next hypothesis.
 
-The comparison tools expose global and local evidence, but their scope is deliberate: a complex-page iteration must use named-region evidence, not a global score. A lower global error can hide a broken header or text block, so inspect the active crop and accepted-region results before accepting an iteration.
+The comparison tools expose global and local evidence, but their scope is deliberate: a complex-page iteration must use named-region evidence, not a global score. A lower global error can hide a broken header or text block, so inspect the active and accepted-region results before accepting an iteration; request image artifacts only when the text evidence is insufficient.
 
 Useful diagnosis patterns:
 
@@ -452,20 +459,20 @@ Set a task-appropriate `MAX_ITERATIONS`; use 20 when the user has not supplied a
 
 - reference and candidate dimensions match exactly;
 - the final full-page comparison meets configured `max-mae`, `min-within-tolerance`, and hottest-tile thresholds;
-- during section-first work, the active and previously accepted crops meet their configured region thresholds;
+- during section-first work, the active and previously accepted named regions meet their configured region thresholds;
 - named important regions meet their own visual expectations;
 - no large unresolved mismatch cluster remains in a high-priority region;
 - the last three accepted iterations do not show a meaningful improvement, or the acceptance thresholds have passed;
 - any responsive smoke viewport renders a non-flat page without captured browser/page errors;
 - required project verification and interaction checks pass.
 
-If the iteration cap or plateau is reached first, stop and report the remaining crop/region mismatch bbox, hottest regions, metrics, and likely next hypothesis. Never loop indefinitely and never describe a threshold pass as exact pixel identity unless `exact_fraction` is actually 1.0 under the chosen renderer. For focused comparisons, state that global metrics were intentionally omitted rather than treating the missing value as a pass.
+If the iteration cap or plateau is reached first, stop and report the remaining region mismatch bbox, hottest regions, metrics, and likely next hypothesis. Never loop indefinitely and never describe a threshold pass as exact pixel identity unless `exact_fraction` is actually 1.0 under the chosen renderer. For focused comparisons, state that global metrics were intentionally omitted rather than treating the missing value as a pass.
 
 ### 7. Verify behavior and finalize
 
 After visual acceptance:
 
-1. Run `verify --final` without `--section-only` and preserve its JSON/Markdown reports. A section-first plan is not complete until this final whole-page gate passes.
+1. Run `verify --final` without `--section-only` and preserve its JSON/Markdown reports. Add `--diagnostic` only when final overlay/diff/mask evidence is needed. A section-first plan is not complete until this final whole-page gate passes.
 2. Run the project's normal build, lint, typecheck, and test commands when available.
 3. Exercise visible interactions that the reference implies: tabs, navigation, search/filtering, toggles, buttons, and keyboard focus as applicable. Use the highest practical seam; do not replace behavior tests with screenshot equality.
 4. Check responsive smoke sizes when the project is expected to be responsive.
@@ -491,8 +498,8 @@ A model without image vision must still be able to complete the workflow. It mus
 
 1. `inspection.json` for reference dimensions, colors, and edge peaks;
 2. `decomposition.json` or `decomposition.md` for the section map, order, owners, states, dependencies, complexity policy, and acceptance criteria;
-3. `crop.md`/`crop.json` and generated `sections.json` for active/accepted crop bounds and optional absolute-coordinate grid artifacts;
-4. `comparison.md` first for the concise full-page or focused regional summary; open `comparison.json` only when detailed metrics or evidence are needed;
+3. generated `sections.json` for active/accepted bounds; use `crop.md`/`crop.json` and grid artifacts only when `crop` was explicitly run;
+4. `comparison.md` first for the concise full-page or focused regional summary; visual artifacts are present only when `--diagnostic` was used;
 5. mismatch bbox, absolute region bbox, top rows/columns, scanlines, point probes, and tile hotspots from the relevant report for localization;
 6. the current source and browser/project inspection output for mapping coordinates to selectors or modules;
 7. the progress log for the previous hypothesis and regression result;

@@ -218,15 +218,20 @@ def ensure_next_event(page_dir: Path, context: IterationContext, operation: str)
         if operation != "render" or operations:
             raise IterationError("Iteration 000 accepts exactly one render event")
         return
-    expected = ["crop", "render"]
-    if len(operations) < len(expected):
-        if operation != expected[len(operations)]:
-            raise IterationError(
-                f"Iteration {context.number:03d} expects {expected[len(operations)]} next, received {operation}"
-            )
+    expected_next = {
+        (): ("crop", "render"),
+        ("crop",): ("render",),
+        ("render",): ("compare", "verify"),
+        ("crop", "render"): ("compare", "verify"),
+    }
+    allowed = expected_next.get(tuple(operations))
+    if allowed and operation in allowed:
         return
-    if len(operations) == len(expected) and operation in {"compare", "verify"}:
-        return
+    if allowed:
+        expected_text = " or ".join(allowed)
+        raise IterationError(
+            f"Iteration {context.number:03d} expects {expected_text} next, received {operation}"
+        )
     raise IterationError(
         f"Iteration {context.number:03d} is complete; start a new iteration for another edit"
     )

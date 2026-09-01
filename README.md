@@ -134,6 +134,8 @@ python .pi/skills/pixel-perfect/scripts/pixel-perfect.py --help
 
 Read [`SKILL.md`](SKILL.md) when you need the technical details.
 
+Visual diagnostics are lazy by default: `compare` and `verify` write metrics and metadata without generating crop, overlay, diff, or mask images. Add `--diagnostic` when those visual artifacts are needed; `crop` remains an explicit analysis command.
+
 ## Requirements
 
 - Node.js `22.20.0` or newer for the current `skills` CLI.
